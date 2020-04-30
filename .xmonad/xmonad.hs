@@ -33,28 +33,13 @@ import Data.List (sortBy)
 import Data.Function (on)
 import Control.Monad (forM_, join)
 
---main = xmonad kdeConfig
---    { modMask = mod4Mask -- use the Windows button as mod
---    , manageHook = manageHook kdeConfig <+> myManageHook
---    }
-
---myManageHook = composeAll . concat $
---    [ [ className   =? c --> doFloat           | c <- myFloats]
---    , [ title       =? t --> doFloat           | t <- myOtherFloats]
---
---    , [ className   =? c --> doF (W.shift "2") | c <- webApps]
---    , [ className   =? c --> doF (W.shift "3") | c <- ircApps]
---    ]
---  where myFloats      = ["MPlayer", "Gimp"]
---        myOtherFloats = ["alsamixer"]
---        webApps       = ["Firefox-bin", "Opera"] -- open on desktop 2
---        ircApps       = ["Ksirc"]                -- open on desktop 3
-
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import qualified DBus as D
 import qualified DBus.Client as D
 import qualified Codec.Binary.UTF8.String as UTF8
+
+import Graphics.X11.ExtraTypes.XF86
 
 myTerminal      = "tilix"
 -- Define modMask
@@ -224,6 +209,12 @@ keys' conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
     , ((modMask .|. shiftMask,      xK_q        ), restart "xmonad" True)
     -- , ((modMask .|. shiftMask,      xK_r        ), spawn "killall conky dzen2 && xmonad --recompile && xmonad --restart")
     ]
+
+    ++
+    -- Volume control
+    [((0, xF86XK_AudioLowerVolume   ), spawn "amixer -q -D pulse sset Master 2%-")
+    , ((0, xF86XK_AudioRaiseVolume   ), spawn "amixer -q -D pulse sset Master 2%+")
+    , ((0, xF86XK_AudioMute          ), spawn "amixer -q -D pulse sset Master toggle")]
     ++
     -- mod-[1..9] %! Switch to workspace N
     -- mod-shift-[1..9] %! Move client to workspace N
@@ -236,7 +227,6 @@ keys' conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
     --
-    -- Isn't this default behavior???
     -- [((modMask .|. mask, key), f sc)
     --     | (key, sc) <- zip [xK_q, xK_w] [0..]
     --     , (f, mask) <- [(viewScreen, 0), (sendToScreen, shiftMask)]]
