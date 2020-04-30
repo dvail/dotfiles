@@ -29,7 +29,7 @@ import XMonad.Layout.ResizableTile
 import XMonad.Layout.Spiral
 import XMonad.Layout.NoBorders
 import XMonad.Layout.Gaps
-import Data.List (sortBy)
+import Data.List (sortBy, group)
 import Data.Function (on)
 import Control.Monad (forM_, join)
 
@@ -174,16 +174,10 @@ keys' conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
     , ((modMask,                    xK_t        ), spawn $ XMonad.terminal conf) -- spawn terminal
     , ((modMask,                    xK_f        ), spawn "firefox")
     , ((modMask,                    xK_v        ), spawn "code")
-    , ((modMask,                    xK_r        ), spawn "rofi -show run")
-    , ((modMask,                    xK_n        ), spawn "nautlius")
+    , ((modMask,                    xK_x        ), spawn "rofi -show run")
     , ((modMask,                    xK_c        ), spawn "chromium-browser")
     , ((modMask,                    xK_g        ), spawn "gimp")
     , ((modMask,                    xK_s        ), spawn "spotify")
-
-    -- Media Keys
-  --  , ((0,                          0x1008ff12  ), spawn "vol mute") -- XF86AudioMute
-   -- , ((0,                          0x1008ff11  ), spawn "vol down") -- XF86AudioLowerVolume
-    --, ((0,                          0x1008ff13  ), spawn "vol up") -- XF86AudioRaiseVolume
 
     -- layouts
     , ((modMask,                    xK_space    ), sendMessage NextLayout)
@@ -207,15 +201,17 @@ keys' conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
 
     -- quit, or restart
     , ((modMask .|. shiftMask,      xK_q        ), restart "xmonad" True)
-    -- , ((modMask .|. shiftMask,      xK_r        ), spawn "killall conky dzen2 && xmonad --recompile && xmonad --restart")
     ]
 
     ++
+
     -- Volume control
-    [((0, xF86XK_AudioLowerVolume   ), spawn "amixer -q -D pulse sset Master 2%-")
+    [ ((0, xF86XK_AudioLowerVolume   ), spawn "amixer -q -D pulse sset Master 2%-")
     , ((0, xF86XK_AudioRaiseVolume   ), spawn "amixer -q -D pulse sset Master 2%+")
-    , ((0, xF86XK_AudioMute          ), spawn "amixer -q -D pulse sset Master toggle")]
+    , ((0, xF86XK_AudioMute          ), spawn "amixer -q -D pulse sset Master toggle")
+    ]
     ++
+
     -- mod-[1..9] %! Switch to workspace N
     -- mod-shift-[1..9] %! Move client to workspace N
     [((m .|. modMask, k), windows $ f i)
@@ -244,6 +240,7 @@ dbusOutput dbus str = do
             D.signalBody = [D.toVariant ("<b>" ++ (UTF8.decodeString str) ++ "</b>")]
         }
     D.emit dbus signal
+
 
 eventLogHook = do
   winset <- gets windowset
