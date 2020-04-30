@@ -80,35 +80,27 @@ manageHook' :: ManageHook
 manageHook' = (composeAll . concat $
     [[manageHook kde4Config]
     , [resource     =? r            --> doIgnore            |   r   <- myIgnores] -- ignore desktop
-    , [className    =? c            --> doShift  "3"    |   c   <- myWebs   ] -- move webs to webs
-    , [className    =? c            --> doShift  "2"    |   c   <- myDevs   ] -- move devs to devs
-    , [className    =? c            --> doF(W.shift "6")   |   c   <- myWines  ] -- move wines to wine
     , [className    =? c            --> doCenterFloat       |   c   <- myFloats ] -- float my floats
     , [name         =? n            --> doCenterFloat       |   n   <- myNames  ] -- float my names
     , [isFullscreen                 --> myDoFullFloat                           ]
     ]) 
 
     where
-
         role      = stringProperty "WM_WINDOW_ROLE"
         name      = stringProperty "WM_NAME"
 
-        -- classnames
+        -- WM_CLASS to float
         myFloats  = [
           "MPlayer","Zenity","Xmessage",
           "Save As...","Save Image","XFontSel",
           "Downloads","downloads", 
-          "Microsoft Teams Notification", 
           "plasmashell"]
-        myWebs    = ["Uzbl","uzbl","Uzbl-core","uzbl-core"]
-        myDevs    = []
-        myWines   = ["Wino"]
 
         -- resources
         myIgnores =  ["xfdesktop", "desktop","desktop_window","notify-osd","stalonetray","trayer"]
 
-        -- names
-        myNames   = ["bashrun","Google Chrome Options","Chromium Options"]
+        -- WM_NAME to float
+        myNames   = ["bashrun","Google Chrome Options","Chromium Options", "Microsoft Teams Notification"]
 
 -- a trick for fullscreen but stil allow focusing of other WSs
 myDoFullFloat :: ManageHook
@@ -195,7 +187,7 @@ keys' conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
     , ((mod1Mask .|. controlMask,   xK_Left     ), prevWS)
     , ((mod1Mask .|. shiftMask,     xK_Left     ), shiftToPrev)
 
-    -- resizing the master/slave ratio
+    -- resizing the window ratio
     , ((modMask,               xK_h     ), sendMessage Shrink) -- %! Shrink the master area
     , ((modMask,               xK_l     ), sendMessage Expand) -- %! Expand the master area    
 
@@ -218,14 +210,12 @@ keys' conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
         , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
 
-    -- ++
-    --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
-    --
-    -- [((modMask .|. mask, key), f sc)
-    --     | (key, sc) <- zip [xK_q, xK_w] [0..]
-    --     , (f, mask) <- [(viewScreen, 0), (sendToScreen, shiftMask)]]
+    ++
+    [((m .|. modMask, key), screenWorkspace sc >>= flip whenJust (windows . f))
+        | (key, sc) <- zip [xK_w, xK_e, xK_r] [0..]
+        , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 --}}}
 
 getWellKnownName :: D.Client -> IO ()
